@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_app_badger/flutter_app_badger.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -67,6 +68,8 @@ class _FrontScreenState extends State<FrontScreen> {
   bool affiliate = false;
   String timeIn = '';
   String timeOut = '';
+  String ot_status = '0';
+  String end_time = '';
   //Setup
   PickedFile _imageFile;
   dynamic _pickImageError;
@@ -127,8 +130,16 @@ class _FrontScreenState extends State<FrontScreen> {
     if (data[0]['status'] == true) {
       badge = data[0]['badge'].toString();
     }
+    updateBadge(badge);
     print("onLoadBadgeLeaveManage badge : $badge");
     setState(() {});
+  }
+
+  updateBadge(badge) async {
+    setState(() {
+      var badgeCount = int.parse(badge);
+      FlutterAppBadger.updateBadgeCount(badgeCount);
+    });
   }
 
   _getMyLocation() {
@@ -159,33 +170,43 @@ class _FrontScreenState extends State<FrontScreen> {
   // --- Post Data Member
   List<ItemsAttandToDay> _resultAttand = [];
   Future<bool> onLoadAttend() async {
+    print("apiGetAttandCheck time_id ${_itemMember[0].TIME_ID}");
     Map map = {
       "uid": _items.length > 0 ? _items[0].ID : '',
-      "time_id": await SharedCashe.getItemsWay(name: 'time_id') != ""
-          ? await SharedCashe.getItemsWay(name: 'time_id')
+      "time_id": _itemMember[0].TIME_ID != ''
+          ? _itemMember[0].TIME_ID
           : _items[0].TIME_ID
     };
-    print("apiGetAttandCheck $_itemMember");
-    print("apiGetAttandCheck : $map");
+    print("apiGetAttandCheck _itemMember $_itemMember");
+    print("apiGetAttandCheck map : $map");
     await AttandFuture().apiGetAttandCheck(map).then((onValue) {
       print("apiGetAttandCheck ${onValue[0].STATUS}");
       if (onValue[0].STATUS != 'success') {
+        print('apiGetAttandCheck ยังไม่ login');
+        _resultAttand = onValue;
         setState(() {
           _login = true;
           _logout = false;
+          if (_resultAttand[0].END_TIME != null) {
+            end_time = _resultAttand[0].END_TIME;
+          }
         });
       } else {
         setState(() {
+          print('apiGetAttandCheck ได้ login แล้ว');
           _resultAttand = onValue;
           if (_resultAttand[0].END_TIME == null && !_login) {
             _logout = true;
           } else {
             _logout = false;
           }
+          end_time = _resultAttand[0].END_TIME;
         });
       }
       print("apiGetAttandCheck _login : $_login");
       print("apiGetAttandCheck _logout : $_logout");
+      print("apiGetAttandCheck end_time : $end_time");
+      print("apiGetAttandCheck END_TIME : ${_resultAttand[0].END_TIME}");
     });
     setState(() {});
     return true;
@@ -209,13 +230,19 @@ class _FrontScreenState extends State<FrontScreen> {
           print("onLoadMemberManage ${_itemMember[0].TIME_ID}");
           print(
               "onLoadMemberManage LEAVE MEMBER ${_itemMember[0].LEAVE_MEMBER}");
+          // SharedCashe.savaItemsString(
+          //     key: 'time_id', valString: _itemMember[0].TIME_ID);
+          // var time_id =  SharedCashe.getItemsWay(name: 'time_id');
+          print(
+              "onLoadMemberManage time_id : ${SharedCashe.getItemsWay(name: 'time_id')}");
           if (_itemMember[0].ORG_SUB_ID != '') {
             SharedCashe.savaItemsString(
                 key: 'org_sub_id',
                 valString: _itemMember[0].ORG_SUB_ID.toString());
             FirebaseMessaging.instance.subscribeToTopic(
                 "org_" + _itemMember[0].ORG_SUB_ID.toString());
-            print("FirebaseMessaging ORG_SUB_ID ${_itemMember[0].ORG_SUB_ID}");
+            print(
+                "FirebaseMessaging ORG_SUB_ID v2 ${_itemMember[0].ORG_SUB_ID}");
           }
 
           FirebaseMessaging.instance.subscribeToTopic("users_" + uid);
@@ -230,6 +257,7 @@ class _FrontScreenState extends State<FrontScreen> {
             affiliate = false;
           }
           print("onLoadMemberManage $affiliate");
+          _getShaerd();
         }
       });
     });
@@ -253,6 +281,7 @@ class _FrontScreenState extends State<FrontScreen> {
     await TimeManageFuture().apiGetTimeManageList(map).then((onValue) {
       if (onValue[0].STATUS == true) {
         _resultItem = onValue[0].RESULT;
+        ot_status = onValue[0].OT_STATUS;
         print(_resultItem.length);
         _resultItemDay = List.from(json
             .decode(_resultItem[0].DESCRIPTION)
@@ -271,7 +300,8 @@ class _FrontScreenState extends State<FrontScreen> {
           });
         }
       }
-      print("apiGetTimeManageList :$dayWorking");
+      print("apiGetTimeManageList : $dayWorking");
+      print("apiGetTimeManageList ot_status : $ot_status");
     });
     return true;
   }
@@ -352,6 +382,7 @@ class _FrontScreenState extends State<FrontScreen> {
         org_id = _items[0].ORG_ID;
       });
       Map _map = {"ID": _items[0].ORG_ID != '' ? _items[0].ORG_ID : ''};
+      print("_getShaerd ${_map}");
       onLoadSelectOrganization(_map);
     }
   }
@@ -792,10 +823,15 @@ class _FrontScreenState extends State<FrontScreen> {
                                       child: GestureDetector(
                                         onTap: () {
                                           if (_login) {
-                                            // popupOT_in(context);
                                             print("dayWorking : $dayWorking");
                                             if (dayWorking) {
-                                              _imgFromCamera_in(context, false);
+                                              if (ot_status == '1' &&
+                                                  end_time != '') {
+                                                popupOT_in(context);
+                                              } else {
+                                                _imgFromCamera_in(
+                                                    context, false);
+                                              }
                                             } else {
                                               popupOT_in(context);
                                             }
@@ -879,8 +915,16 @@ class _FrontScreenState extends State<FrontScreen> {
                                         onTap: () {
                                           if (_logout) {
                                             if (dayWorking) {
-                                              _imgFromCamera_out(
-                                                  context, false);
+                                              print(
+                                                  "dayWorking logout : $dayWorking");
+                                              if (ot_status == '1' &&
+                                                  end_time != '') {
+                                                _imgFromCamera_out(
+                                                    context, true);
+                                              } else {
+                                                _imgFromCamera_out(
+                                                    context, false);
+                                              }
                                             } else {
                                               _imgFromCamera_out(context, true);
                                             }
@@ -1134,10 +1178,10 @@ class _FrontScreenState extends State<FrontScreen> {
             });
       }
     } catch (e) {
-      setState(() {
-        _pickImageError = e;
-        print(_pickImageError.toString());
-      });
+      // setState(() {
+      //   _pickImageError = e;
+      //   print(_pickImageError.toString());
+      // });
     }
   }
 
@@ -1147,8 +1191,8 @@ class _FrontScreenState extends State<FrontScreen> {
         builder: (_) {
           return OTDialog(
             onConfirmTap: (String otNote) {
-              Navigator.pop(context);
-              print("otnote $otNote");
+              // Navigator.pop(context);
+              // print("otnote $otNote");
               OT_note = otNote;
               _imgFromCamera_in(context, true);
             },

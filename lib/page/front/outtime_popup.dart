@@ -9,7 +9,6 @@ class OTDialog extends StatefulWidget {
   @override
   State<OTDialog> createState() => _OTDialogState();
   final Function(String) onConfirmTap;
-  
 }
 
 class _OTDialogState extends State<OTDialog> {
@@ -27,40 +26,6 @@ class _OTDialogState extends State<OTDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Container(
-              //   padding: EdgeInsets.only(top: 5),
-              //   height: 150,
-              //   child: Image.file(
-              //     File(widget.pathImage),
-              //     fit: BoxFit.fitHeight,
-              //   ),
-              // ),
-              // Container(
-              //   child: Column(
-              //     children: [
-              //       Text(
-              //         Clock().getTime(),
-              //         style: TextStyle(
-              //           fontFamily: FontStyles().FontFamily,
-              //           height: 1,
-              //           fontSize: 40,
-              //           color: Color(0xFF757575),
-              //         ),
-              //       )
-              //     ],
-              //   ),
-              // ),
-              // distanc()
-              //     ? Container()
-              //     : Container(
-              //         child: Text(
-              //           'คุณไม่ได้อยู่ในพื้นที่',
-              //           style: TextStyle(
-              //               fontFamily: FontStyles().FontFamily,
-              //               fontSize: 18,
-              //               color: Colors.red),
-              //         ),
-              //       ),
               Container(
                 height: 100,
                 child: Center(
@@ -153,11 +118,11 @@ class _OTDialogState extends State<OTDialog> {
                     Expanded(
                       child: InkWell(
                         onTap: () {
+                          print('show camera');
                           if (_formKey.currentState.validate()) {
-widget.onConfirmTap?.call(_inputNote.text);
+                            Navigator.pop(context);
+                            widget.onConfirmTap?.call(_inputNote.text);
                           }
-                
-                          
                         },
                         child: Container(
                           decoration: BoxDecoration(
