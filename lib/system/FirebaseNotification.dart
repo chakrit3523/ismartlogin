@@ -9,7 +9,6 @@ import 'package:ismart_login/system/shared_preferences.dart';
 import '../main.dart';
 
 class FirebaseNotification {
-
   String channelId = "1000";
   String channelName = "FLUTTER_NOTIFICATION_CHANNEL";
   String channelDescription = "FLUTTER_NOTIFICATION_CHANNEL_DETAIL";
@@ -155,8 +154,6 @@ class FirebaseNotification {
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(channel);
-
-    
   }
 
   Future<void> enableIOSNotifications() async {
