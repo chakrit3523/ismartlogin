@@ -506,7 +506,7 @@ class _LeaveStatisticsDetailScreenState
                                                                 alignment: Alignment
                                                                     .bottomLeft,
                                                                 child: Text(
-                                                                  "อื่นๆ",
+                                                                  "อื่น ๆ",
                                                                   style:
                                                                       TextStyle(
                                                                     color: Colors
@@ -552,11 +552,13 @@ class _LeaveStatisticsDetailScreenState
                                                                     child: Text(
                                                                       data[i]['subject']
                                                                           .toString(),
-                                                                          maxLines: 1,
-                                                                          overflow: TextOverflow.ellipsis,
+                                                                      maxLines:
+                                                                          1,
+                                                                      overflow:
+                                                                          TextOverflow
+                                                                              .ellipsis,
                                                                       style:
                                                                           TextStyle(
-                                                                          
                                                                         color: Colors
                                                                             .white,
                                                                         fontSize:
@@ -568,7 +570,6 @@ class _LeaveStatisticsDetailScreenState
                                                                   ),
                                                                 ),
                                                                 Container(
-
                                                                   child: Align(
                                                                     alignment:
                                                                         Alignment
